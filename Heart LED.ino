@@ -14,6 +14,9 @@ void setup() {
     pinMode(buttonPin, INPUT_PULLUP); // Use internal pull-up resistor
 }
 
+
+// Function to set up the LED pin and button pin
+
 void loop() {
     // Button logic (active LOW)
     if (digitalRead(buttonPin) == LOW) {
