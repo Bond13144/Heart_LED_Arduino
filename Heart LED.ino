@@ -1,8 +1,9 @@
 // Heart LED Arduino - Pulsating LED with Button Control
 
 #include <Arduino.h>
+//#include <FastLED.h> // Include FastLED library for LED control
 
-const int ledPin = 6;      // LED connected to digital pin 6 (PWM)
+const int ledPin = 3;      // LED connected to digital pin 3 (PWM)
 const int buttonPin = 2;   // Button connected to digital pin 2
 
 bool ledOn = false;
@@ -11,7 +12,7 @@ bool buttonPressed = false;
 
 void setup() {
     pinMode(ledPin, OUTPUT);
-    pinMode(buttonPin, INPUT_PULLUP); // Use internal pull-up resistor
+    //pinMode(buttonPin, INPUT_PULLUP); // Use internal pull-up resistor UPD: Changed to OUTPUT resistor
 }
 
 
