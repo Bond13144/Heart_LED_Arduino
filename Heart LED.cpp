@@ -26,14 +26,17 @@ void loop() {
             buttonPressTime = millis();
             ledOn = true;
         } else {
-            // Check if button held for 2 seconds
-            if (millis() - buttonPressTime >= 2000) {
+            // Check if button held for 5 seconds
+            if (millis() - buttonPressTime >= 5000) {
                 ledOn = false;
             }
-        }
-    } else {
+        } //else {
+            // Button pushed for 2 seconds
+            //if (millis() - buttonPressTime >= 2000) {}
+        } else {
         buttonPressed = false;
     }
+    
 
     // LED control with attenuation (pulsating effect)
     if (ledOn) {
@@ -49,5 +52,31 @@ void loop() {
         }
     } else {
         analogWrite(ledPin, 0); // LED off
+        }
+}
+
+
+// Function to set color of the LED
+#define ledPin 3;
+
+void sendBit(bool bit) {
+    if (bit) {
+        // Send a 1 bit
+        digitalWrite(3, HIGH);
+        delayMicroseconds(0.8);
+        digitalWrite(3, LOW);
+        delayMicroseconds(0.45);
+    } else {
+        // Send a 0 bit
+        digitalWrite(3, HIGH);
+        delayMicroseconds(0.4);
+        digitalWrite(3, LOW);
+        delayMicroseconds(0.85);
+    }
+}
+
+void sendByte(uint8_t byte) {
+    for (int i = 7; i >= 0; i--) { // Send bits from MSB to LSB
+        sendBit(byte & (1 << i));
     }
 }
