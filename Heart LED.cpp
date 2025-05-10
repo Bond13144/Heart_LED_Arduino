@@ -1,7 +1,8 @@
 // Heart LED Arduino - Pulsating LED with Button Control
 
 #include <Arduino.h>
-//#include <FastLED.h> // Include FastLED library for LED control
+//#include <FastLED.h> Include FastLED library for LED control
+//#include <Adafruit_NeoPixel.h> Include Adafruit NeoPixel library for LED control
 
 const int ledPin = 3;      // LED connected to digital pin 3 (PWM)
 const int buttonPin = 2;   // Button connected to digital pin 2
@@ -57,26 +58,66 @@ void loop() {
 
 
 // Function to set color of the LED
-#define ledPin 3;
+#define ledPin 3
 
-void sendBit(bool bit) {
-    if (bit) {
-        // Send a 1 bit
-        digitalWrite(3, HIGH);
-        delayMicroseconds(0.8);
-        digitalWrite(3, LOW);
-        delayMicroseconds(0.45);
-    } else {
-        // Send a 0 bit
-        digitalWrite(3, HIGH);
-        delayMicroseconds(0.4);
-        digitalWrite(3, LOW);
-        delayMicroseconds(0.85);
+//void sendBit(bool bit) {
+//    if (bit) {
+//        // Send a 1 bit
+//        digitalWrite(ledPin, HIGH);
+//        delayMicroseconds(0.8);
+//        digitalWrite(ledPin, LOW);
+//        delayMicroseconds(0.45);
+//    } else {
+//        // Send a 0 bit
+//        digitalWrite(ledPin, HIGH);
+//        delayMicroseconds(0.4);
+//        digitalWrite(ledPin, LOW);
+//        delayMicroseconds(0.85);
+//    }
+//}
+
+void sendByte(uint8_t byte) {
+    for(uint8_t mask =0x80; mask !=0; mask >>= 1) {
+        if (byte & mask) {
+            // send a 1 bit
+            digitalWrite(ledPin, HIGH);
+            __asm__ __volatile__(
+                "nop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\n" // 0.8us
+            ); 
+            digitalWrite(ledPin, LOW);
+            __asm__ __volatile__(
+                "nop\nnop\nnop\nnop\nnop\n" // 0.45us
+            ); 
+        } else{
+            // send a 0 bit
+            digitalWrite(ledPin, HIGH);
+            __asm__ __volatile__(
+                "nop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\n" // 0.4us
+            ); 
+            digitalWrite(ledPin, LOW);
+            __asm__ __volatile__(
+                "nop\nnop\nnop\nnop\nnop\n" // 0.85us
+            ); 
+        }
     }
 }
 
-void sendByte(uint8_t byte) {
-    for (int i = 7; i >= 0; i--) { // Send bits from MSB to LSB
-        sendBit(byte & (1 << i));
-    }
+
+void sendColor(uint8_t g, uint8_t r, uint8_t b) {
+    // Send color data in GRB format
+    sendByte(g);
+    sendByte(r);
+    sendByte(b);
+}
+
+void setup() {
+    pinMode(ledPin,OUTPUT);
+    noInterrupts();
+    delayMicroseconds(50); // Reset code(wait for 50 us)
+    //sendColor(g, r, b); Send color data
+    interrupts();
+}
+
+void loop() {
+    
 }
