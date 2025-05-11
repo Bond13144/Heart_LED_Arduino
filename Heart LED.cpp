@@ -11,11 +11,36 @@ bool ledOn = false;
 unsigned long buttonPressTime = 0;
 bool buttonPressed = false;
 
+#define ledPin 3
+#define buttonPin 2
+
+int colorIndex=0;
+unsigned long buttonPressTime=0;
+bool isPressed=false;
+
+const uint8_t colors[][3] = {
+    {255, 0, 0}, // Red
+    {0,255, 0}, // Green
+    {0, 0, 255}, // Blue
+    {255, 255, 0}, // Yellow
+    {255, 0, 255}, // Magenta
+    {0, 255, 255}, // Cyan
+    {0, 0, 0} // off
+};
+
+//void setup() {
+//    pinMode(ledPin, OUTPUT);
+//    //pinMode(buttonPin, INPUT_PULLUP); // Use internal pull-up resistor UPD: Changed to OUTPUT resistor
+//}
+
 void setup() {
     pinMode(ledPin, OUTPUT);
-    //pinMode(buttonPin, INPUT_PULLUP); // Use internal pull-up resistor UPD: Changed to OUTPUT resistor
+    pinMode(buttonPin, INPUT); // set button external pull-up resistor 
+    noInterrupts();
+    delayMicroseconds(50); // Reset code(wait for 50 us)
+    sendColor(colors[colorIndex][0], colors[colorIndex][1], colors[colorIndex][2]); //Send color data
+    interrupts();
 }
-
 
 // Function to set up the LED pin and button pin
 
@@ -31,50 +56,33 @@ void loop() {
             if (millis() - buttonPressTime >= 5000) {
                 ledOn = false;
             }
-        } //else {
-            // Button pushed for 2 seconds
-            //if (millis() - buttonPressTime >= 2000) {}
+        } 
         } else {
-        buttonPressed = false;
+            buttonPressed = false;
+        }
+ bool buttonState = digitalRead(buttonPin) == LOW; 
+
+    if (buttonState && !isPressed) {
+        isPressed = true;
+        buttonPressTime = millis();
     }
-    
 
-    // LED control with attenuation (pulsating effect)
-    if (ledOn) {
-        // Pulsate LED using sine wave
-        static unsigned long lastMillis = 0;
-        static float angle = 0;
-        if (millis() - lastMillis > 15) { // Adjust speed here
-            lastMillis = millis();
-            angle += 0.08; // Adjust smoothness here
-            if (angle > 2 * PI) angle -= 2 * PI;
-            int brightness = (sin(angle) * 127.5) + 127.5; // 0-255
-            analogWrite(ledPin, brightness);
+    if (!buttonState && isPressed) {
+        unsigned long pressDuration = millis() - buttonPressTime;
+        isPressed = false;
+        
+        if (pressDuration >= 1000) { // 1 sec+
+            colorIndex = 6; // set black
+        } else {
+            colorIndex = (colorIndex + 1) % 6; 
         }
-    } else {
-        analogWrite(ledPin, 0); // LED off
-        }
+
+        noInterrupts();
+        delayMicroseconds(60);
+        sendColor(colors[colorIndex][0], colors[colorIndex][1], colors[colorIndex][2]);
+        interrupts();
+    }
 }
-
-
-// Function to set color of the LED
-#define ledPin 3
-
-//void sendBit(bool bit) {
-//    if (bit) {
-//        // Send a 1 bit
-//        digitalWrite(ledPin, HIGH);
-//        delayMicroseconds(0.8);
-//        digitalWrite(ledPin, LOW);
-//        delayMicroseconds(0.45);
-//    } else {
-//        // Send a 0 bit
-//        digitalWrite(ledPin, HIGH);
-//        delayMicroseconds(0.4);
-//        digitalWrite(ledPin, LOW);
-//        delayMicroseconds(0.85);
-//    }
-//}
 
 void sendByte(uint8_t byte) {
     for(uint8_t mask =0x80; mask !=0; mask >>= 1) {
@@ -102,7 +110,6 @@ void sendByte(uint8_t byte) {
     }
 }
 
-
 void sendColor(uint8_t g, uint8_t r, uint8_t b) {
     // Send color data in GRB format
     sendByte(g);
@@ -110,14 +117,30 @@ void sendColor(uint8_t g, uint8_t r, uint8_t b) {
     sendByte(b);
 }
 
-void setup() {
-    pinMode(ledPin,OUTPUT);
-    noInterrupts();
-    delayMicroseconds(50); // Reset code(wait for 50 us)
-    //sendColor(g, r, b); Send color data
-    interrupts();
-}
 
-void loop() {
-    
-}
+// Function to set color of the LED
+
+
+//void sendBit(bool bit) {
+//    if (bit) {
+//        // Send a 1 bit
+//        digitalWrite(ledPin, HIGH);
+//        delayMicroseconds(0.8);
+//        digitalWrite(ledPin, LOW);
+//        delayMicroseconds(0.45);
+//    } else {
+//        // Send a 0 bit
+//        digitalWrite(ledPin, HIGH);
+//        delayMicroseconds(0.4);
+//        digitalWrite(ledPin, LOW);
+//        delayMicroseconds(0.85);
+//    }
+//}
+
+
+
+
+
+
+
+
