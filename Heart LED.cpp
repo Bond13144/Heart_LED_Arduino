@@ -4,18 +4,13 @@
 //#include <FastLED.h> Include FastLED library for LED control
 //#include <Adafruit_NeoPixel.h> Include Adafruit NeoPixel library for LED control
 
-const int ledPin = 3;      // LED connected to digital pin 3 (PWM)
-const int buttonPin = 2;   // Button connected to digital pin 2
-
-
 
 uint8_t brightness = 255;
 bool fadeIn = true;
 
-#define ledPin 3
-#define buttonPin 2
+#define ledPin 3 // LED connected to digital pin 3 (PWM)
+#define buttonPin 2 // Button connected to digital pin 2
 
-int colorIndex=0;
 unsigned long buttonPressTime=0;
 bool isPressed=false;
 int currentColorIndex = 0;
@@ -33,17 +28,13 @@ const uint8_t colors[][3] = {  // Color index define
     {0, 0, 0} // off 6
 };
 
-//void setup() {
-//    pinMode(ledPin, OUTPUT);
-//    //pinMode(buttonPin, INPUT_PULLUP); // Use internal pull-up resistor UPD: Changed to OUTPUT resistor
-//}
 
 void setup() {
     pinMode(ledPin, OUTPUT);
     pinMode(buttonPin, INPUT); // set button external pull-up resistor 
     noInterrupts();
     delayMicroseconds(50); // Reset code(wait for 50 us)
-    sendColor(colors[colorIndex][0], colors[colorIndex][1], colors[colorIndex][2]); //Send color data
+    sendColor(colors[currentColorIndex][0], colors[currentColorIndex][1], colors[currentColorIndex][2]); //Send color data
     interrupts();
 }
 
@@ -56,9 +47,19 @@ void loop() {
         if (buttonState && !isPressed && millis() - lastDebounce > 200) {
         isPressed = true;
         lastDebounce = millis();
+        buttonPressTime = millis();
         nextColorIndex = (currentColorIndex + 1) % 6;
         transitioning = true;
         fadeIn = false; 
+    } if (!buttonState && isPressed) {
+        isPressed = false;
+        unsigned long pressDuration = millis() - buttonPressTime;
+        if (pressDuration >= 5000) { // 5 sec+
+            currentColorIndex = 6; // set black/off
+            fadeIn = false;
+            transitioning = false;
+            brightness = 0;
+        }
     }
     if (!buttonState) {
         isPressed = false;
@@ -85,44 +86,28 @@ void loop() {
             if (brightness > 0) brightness --;
             else fadeIn = true;
         }
-    }
 
-    if (!buttonState && isPressed) {
-        unsigned long pressDuration = millis() - buttonPressTime;
-        isPressed = false;
-        
-        if (pressDuration >= 5000) { // 5 sec+
-            colorIndex = 6; // set black/off
-            fadeIn = false;
-        } else {
-            colorIndex = (colorIndex + 1) % 6; // set color
-            brightness = 255;
-            fadeIn = true;
-        }
+    } 
 
-        noInterrupts();
+    noInterrupts();
         delayMicroseconds(60);
         sendColor(
-            colors[colorIndex][0] * brightness / 255, 
-            colors[colorIndex][1] * brightness / 255, 
-            colors[colorIndex][2] * brightness / 255);
+            colors[currentColorIndex][0] * brightness / 255, 
+            colors[currentColorIndex][1] * brightness / 255, 
+            colors[currentColorIndex][2] * brightness / 255);
         interrupts();
-    }
-    if (fadeIn) {
         delay(20);
-        if (brightness > 0) {
-            brightness --;
-            noInterrupts();
-            sendColor(
-                colors[colorIndex][0] * brightness / 255, 
-                colors[colorIndex][1] * brightness / 255, 
-                colors[colorIndex][2] * brightness / 255
-            );
-            interrupts();
-        } else {
-            fadeIn = false;
-        }
-    } 
+
+    //if (!buttonState && isPressed) {
+    //    unsigned long pressDuration = millis() - buttonPressTime;
+    //    isPressed = false;
+    //    
+    //     else {
+    //        currentColorIndex = (currentColorIndex + 1) % 6; // set color
+    //        brightness = 255;
+    //        fadeIn = true;
+    //    }
+    //}
 }
 
 void sendByte(uint8_t byte) { // Function to send a byte to the LED
