@@ -7,9 +7,12 @@
 const int ledPin = 3;      // LED connected to digital pin 3 (PWM)
 const int buttonPin = 2;   // Button connected to digital pin 2
 
-bool ledOn = false;
+int colorIndex = 0;
 unsigned long buttonPressTime = 0;
 bool buttonPressed = false;
+
+uint8_t brightness = 255;
+bool fading = false;
 
 #define ledPin 3
 #define buttonPin 2
@@ -18,14 +21,14 @@ int colorIndex=0;
 unsigned long buttonPressTime=0;
 bool isPressed=false;
 
-const uint8_t colors[][3] = {
-    {255, 0, 0}, // Red
-    {0,255, 0}, // Green
-    {0, 0, 255}, // Blue
-    {255, 255, 0}, // Yellow
-    {255, 0, 255}, // Magenta
-    {0, 255, 255}, // Cyan
-    {0, 0, 0} // off
+const uint8_t colors[][3] = {  // Color index define
+    {255, 0, 0}, // Red 0
+    {0,255, 0}, // Green 1 
+    {0, 0, 255}, // Blue 2
+    {255, 255, 0}, // Yellow 3
+    {255, 0, 255}, // Magenta 4
+    {0, 255, 255}, // Cyan 5
+    {0, 0, 0} // off 6
 };
 
 //void setup() {
@@ -42,7 +45,7 @@ void setup() {
     interrupts();
 }
 
-// Function to set up the LED pin and button pin
+// Function to set up color of the LED
 
 void loop() {
     // Button logic (active LOW)
@@ -50,12 +53,12 @@ void loop() {
         if (!buttonPressed) {
             buttonPressed = true;
             buttonPressTime = millis();
-            ledOn = true;
+            colorIndex = 0;
         } else {
             // Check if button held for 5 seconds
-            if (millis() - buttonPressTime >= 5000) {
-                ledOn = false;
-            }
+            //if (millis() - buttonPressTime >= 5000) {
+            //    ledOn = false;
+            //}
         } 
         } else {
             buttonPressed = false;
@@ -71,20 +74,26 @@ void loop() {
         unsigned long pressDuration = millis() - buttonPressTime;
         isPressed = false;
         
-        if (pressDuration >= 1000) { // 1 sec+
-            colorIndex = 6; // set black
+        if (pressDuration >= 5000) { // 5 sec+
+            colorIndex = 6; // set black/off
+            fading = false;
         } else {
-            colorIndex = (colorIndex + 1) % 6; 
+            colorIndex = (colorIndex + 1) % 6; // set color
+            brightness = 255;
+            fading = true;
         }
 
         noInterrupts();
         delayMicroseconds(60);
-        sendColor(colors[colorIndex][0], colors[colorIndex][1], colors[colorIndex][2]);
+        sendColor(
+            colors[colorIndex][0] * brightness / 255, 
+            colors[colorIndex][1] * brightness / 255, 
+            colors[colorIndex][2] * brightness / 255);
         interrupts();
     }
 }
 
-void sendByte(uint8_t byte) {
+void sendByte(uint8_t byte) { // Function to send a byte to the LED
     for(uint8_t mask =0x80; mask !=0; mask >>= 1) {
         if (byte & mask) {
             // send a 1 bit
@@ -110,8 +119,7 @@ void sendByte(uint8_t byte) {
     }
 }
 
-void sendColor(uint8_t g, uint8_t r, uint8_t b) {
-    // Send color data in GRB format
+void sendColor(uint8_t g, uint8_t r, uint8_t b) {   // Send color data in GRB format
     sendByte(g);
     sendByte(r);
     sendByte(b);
