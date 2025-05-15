@@ -15,7 +15,6 @@ bool fadeIn = true;
 #define ledPin 3
 #define buttonPin 2
 
-int colorIndex=0;
 unsigned long buttonPressTime=0;
 bool isPressed=false;
 int currentColorIndex = 0;
@@ -43,7 +42,7 @@ void setup() {
     pinMode(buttonPin, INPUT); // set button external pull-up resistor 
     noInterrupts();
     delayMicroseconds(50); // Reset code(wait for 50 us)
-    sendColor(colors[colorIndex][0], colors[colorIndex][1], colors[colorIndex][2]); //Send color data
+    sendColor(colors[currentColorIndex][0], colors[currentColorIndex][1], colors[currentColorIndex][2]); //Send color data
     interrupts();
 }
 
@@ -56,17 +55,30 @@ void loop() {
         if (buttonState && !isPressed && millis() - lastDebounce > 200) {
         isPressed = true;
         lastDebounce = millis();
-        nextColorIndex = (currentColorIndex + 1) % 6;
-        transitioning = true;
-        fadeIn = false; 
+        buttonPressTime = millis();
+        //nextColorIndex = (currentColorIndex + 1) % 6;
+        //transitioning = true;
+        //fadeIn = false; 
     }
     if (!buttonState) {
         isPressed = false;
+        unsigned long pressDuration = millis() - buttonPressTime;
+        
+        if (pressDuration >= 5000) { // long press to turn off
+            currentColorIndex = 6;
+            fadeIn = false;
+            transitioning = false;
+            brightness = 0; 
+        } else {
+            nextColorIndex = (currentColorIndex + 1) % 6;
+            transitioning = true;
+            fadeIn = false;
+        }
     }
 
     delay(10);
 
-    if (transitioning) {
+    if (transitioning) { // Slow color change
         if (!fadeIn && brightness > 0) {
             brightness --;
         } else if (!fadeIn && brightness == 0) {
@@ -78,7 +90,7 @@ void loop() {
             transitioning = false;
         }
     } else {
-        if (fadeIn) {
+        if (fadeIn) { // Attenuation
             if (brightness < 255) brightness++;
             else fadeIn = false; 
         } else {
@@ -87,42 +99,15 @@ void loop() {
         }
     }
 
-    if (!buttonState && isPressed) {
-        unsigned long pressDuration = millis() - buttonPressTime;
-        isPressed = false;
-        
-        if (pressDuration >= 5000) { // 5 sec+
-            colorIndex = 6; // set black/off
-            fadeIn = false;
-        } else {
-            colorIndex = (colorIndex + 1) % 6; // set color
-            brightness = 255;
-            fadeIn = true;
-        }
-
-        noInterrupts();
-        delayMicroseconds(60);
-        sendColor(
-            colors[colorIndex][0] * brightness / 255, 
-            colors[colorIndex][1] * brightness / 255, 
-            colors[colorIndex][2] * brightness / 255);
-        interrupts();
-    }
-    if (fadeIn) {
-        delay(20);
-        if (brightness > 0) {
-            brightness --;
-            noInterrupts();
-            sendColor(
-                colors[colorIndex][0] * brightness / 255, 
-                colors[colorIndex][1] * brightness / 255, 
-                colors[colorIndex][2] * brightness / 255
-            );
-            interrupts();
-        } else {
-            fadeIn = false;
-        }
-    } 
+    // Color update w brightness
+    noInterrupts();
+    delayMicroseconds(50); // reset signal for diodes
+    sendColor(
+        colors[currentColorIndex][0] * brightness / 255,
+        colors[currentColorIndex][1] * brightness / 255,
+        colors[currentColorIndex][2] * brightness / 255
+    );
+    interrupts();
 }
 
 void sendByte(uint8_t byte) { // Function to send a byte to the LED
