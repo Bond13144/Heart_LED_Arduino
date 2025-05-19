@@ -40,5 +40,59 @@ void setup() {
 
 
 void loop() {
+    bool buttonState = digitalRead(BUTTON_PIN) == LOW;
+    unsigned long now = millis();
 
+    if (buttonState && !isPressed && now - lastDebounce > 200) {
+        isPressed = true;
+        buttonPressStart = now;
+        lastDebounce = now;
+    }
+
+    if (!buttonState && isPressed) {
+        unsigned long pressDuration = now - buttonPressStart;
+        isPressed = false;
+        
+        if (pressDuration >= 5000) {
+            currenColorIndex = 6;
+            transitioning = false;
+            fadeIn = false;
+        } else {
+            nextColorIndex = (currenColorIndex + 1) & 6;
+            transitioning = true;
+            fadeIn = false;
+        } 
+    }
+    if (transitioning) {
+        if (!fadeIn && brightness > 0) {
+            brightness --;
+        } else if (!fadeIn && brightness == 0) {
+            currenColorIndex = nextColorIndex;
+            fadeIn = true;
+        } else if (!fadeIn && brightness < 255) {
+            brightness++;
+        } else if (!fadeIn && brightness == 255) {
+            transitioning = false;
+        }
+    } else {
+        if (fadeIn) {
+            if (brightness < 255) brightness++;
+            else fadeIn = false;
+        } else {
+            if (brightness > 0) brightness--;
+            else fadeIn = true;
+        }
+    }
+
+    //setColor(colors[currenColorIndex][0], colors[currenColorIndex][1], colors[currenColorIndex][2], brightness);
+    delay(20);
+}
+
+
+void setColor(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness) {
+    uint8_t scaledR = r * brightness / 255;
+    uint8_t scaledG = g * brightness / 255;
+    uint8_t scaledB = b * brightness / 255;
+    //strip.setpixelcolor(0, strip.color(scaledR, scaledG, scaledB));
+    //strip.show();
 }
