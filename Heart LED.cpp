@@ -153,23 +153,3 @@ void sendColor(uint8_t g, uint8_t r, uint8_t b) {   // Send color data in GRB fo
     sendByte(r);
     sendByte(b);
 }
-
-
-// Function to set color of the LED
-
-
-//void sendBit(bool bit) {
-//    if (bit) {
-//        // Send a 1 bit
-//        digitalWrite(ledPin, HIGH);
-//        delayMicroseconds(0.8);
-//        digitalWrite(ledPin, LOW);
-//        delayMicroseconds(0.45);
-//    } else {
-//        // Send a 0 bit
-//        digitalWrite(ledPin, HIGH);
-//        delayMicroseconds(0.4);
-//        digitalWrite(ledPin, LOW);
-//        delayMicroseconds(0.85);
-//    }
-//}
