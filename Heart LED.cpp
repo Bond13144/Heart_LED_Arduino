@@ -25,7 +25,9 @@ const uint8_t colors[][3] = {  // Color index define
     {255, 255, 0}, // Yellow 3
     {255, 0, 255}, // Magenta 4
     {0, 255, 255}, // Cyan 5
-    {0, 0, 0} // off 6
+    {0, 191, 205}, // Violet 6
+    {50, 138, 51}, // emerald 7
+    {0, 0, 0}  // black, turned off 8
 };
 
 
@@ -48,14 +50,14 @@ void loop() {
         isPressed = true;
         lastDebounce = millis();
         buttonPressTime = millis();
-        nextColorIndex = (currentColorIndex + 1) % 6;
+        nextColorIndex = (currentColorIndex + 1) % 8;
         transitioning = true;
         fadeIn = false; 
     } if (!buttonState && isPressed) {
         isPressed = false;
         unsigned long pressDuration = millis() - buttonPressTime;
         if (pressDuration >= 5000) { // 5 sec+
-            currentColorIndex = 6; // set black/off
+            currentColorIndex = 8; // set black/off
             fadeIn = false;
             transitioning = false;
             brightness = 0;
@@ -66,12 +68,12 @@ void loop() {
         unsigned long pressDuration = millis() - buttonPressTime;
         
         if (pressDuration >= 5000) { // long press to turn off
-            currentColorIndex = 6;
+            currentColorIndex = 8;
             fadeIn = false;
             transitioning = false;
             brightness = 0; 
         } else {
-            nextColorIndex = (currentColorIndex + 1) % 6;
+            nextColorIndex = (currentColorIndex + 1) % 8;
             transitioning = true;
             fadeIn = false;
         }

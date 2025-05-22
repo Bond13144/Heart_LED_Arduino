@@ -17,7 +17,9 @@ const uint8_t colors[][3] = {
     {255, 255, 0},   // Yellow 3
     {255, 0, 255},   // Magenta 4
     {0, 255, 255},   // Cyan 5
-    {0, 0, 0}  // black, turned off 6
+    {0, 191, 205}, // Violet 6
+    {50, 138, 51}, // emerald 7
+    {0, 0, 0}  // black, turned off 8
 };
 
 int currenColorIndex = 0;
@@ -54,11 +56,11 @@ void loop() {
         isPressed = false;
         
         if (pressDuration >= 5000) {
-            currenColorIndex = 6;
+            currenColorIndex = 8;
             transitioning = false;
             fadeIn = false;
         } else {
-            nextColorIndex = (currenColorIndex + 1) & 6;
+            nextColorIndex = (currenColorIndex + 1) & 8;
             transitioning = true;
             fadeIn = false;
         } 
@@ -84,7 +86,7 @@ void loop() {
         }
     }
 
-    //setColor(colors[currenColorIndex][0], colors[currenColorIndex][1], colors[currenColorIndex][2], brightness);
+    setColor(colors[currenColorIndex][0], colors[currenColorIndex][1], colors[currenColorIndex][2], brightness);
     delay(20);
 }
 
